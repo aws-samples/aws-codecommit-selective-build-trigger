@@ -27,7 +27,7 @@ Parameters:
       be comprised only of lowercase a-z, 0-9, .-)
     Type: String
   LambdaZipS3Bucket:
-    Default: aws-codecommit-selective-build-trigger
+    Default: codecommit-selective-build
     Description: Define the Name of the S3 Bucket containing Lambda code zip
     Type: String
   LambdaZipS3Key:
