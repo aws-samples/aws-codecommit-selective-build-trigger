@@ -39,7 +39,7 @@ Resources:
     Type: AWS::CodeCommit::Repository
     Properties:
       RepositoryDescription: !Sub ${ProjectName}CodeRepo
-      RepositoryName: !Sub ${ProjectName}CodeRepo
+      RepositoryName: !Sub ${ProjectName}coderepo
       Triggers: 
         - Name: MasterTrigger
           CustomData: Project ID sampletest
@@ -50,12 +50,6 @@ Resources:
           - updateReference
   CodeBuildImageRole:
     Type: AWS::IAM::Role
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: W11
-            reason: Specific log group/stream will be created during codebuild execution,
-              so no specific log or log group can be pre-specified.
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -81,7 +75,7 @@ Resources:
                   - logs:PutLogEvents
                 Effect: Allow
                 Resource:
-                  - arn:aws:logs:*:*:*
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
             Version: '2012-10-17'
           PolicyName: !Sub
             - ${Param1}-RolePolicy
@@ -169,12 +163,6 @@ Resources:
           ECR_REPO_NAME: !Ref ECRRepository
   LambdaTriggerRole:
     Type: AWS::IAM::Role
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: W11
-            reason: Specific log group/stream will be created during lambda execution,
-              so no specific log or log group can be pre-specified.
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -196,25 +184,26 @@ Resources:
                   - logs:PutLogEvents
                 Effect: Allow
                 Resource:
-                  - arn:aws:logs:*:*:*
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
                 Sid: LogAccessPolicy
               - Action:
-                  - codecommit:Get*
-                  - codecommit:List*
-                  - codecommit:DescribePullRequestEvents
-                  - codecommit:GitPull
-                  - codecommit:BatchGetRepositories
-                  - codecommit:BatchGetPullRequests
-                  - codecommit:CancelUploadArchive
+                  - codecommit:GetTree
+                  - codecommit:BatchGetCommits
+                  - codecommit:GetCommit
+                  - codecommit:GetCommitHistory
+                  - codecommit:GetDifferences
+                  - codecommit:GetReferences
+                  - codecommit:GetObjectIdentifier
+                  - codecommit:BatchGetCommits
                 Effect: Allow
                 Resource:
-                  - '*'
+                  - !Sub 'arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:${ProjectName}coderepo'
                 Sid: CodeCommitRead
               - Action:
                   - codebuild:StartBuild
                 Effect: Allow
                 Resource:
-                  - arn:aws:codebuild:*:*:*
+                  - !GetAtt CodeBuildImageJob.Arn
                 Sid: CodeBuildStartPolicy
             Version: '2012-10-17'
           PolicyName: !Sub
